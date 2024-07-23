@@ -133,7 +133,7 @@ let p_char ch =
   Parser parser
 ;;
 
-(* Takes a list of parsers lst, and creates a parser that  *)
+(* Takes a list of parsers lst, and creates a parser that contains the list of rules for each parser passed in *)
 let p_list lst = 
   let concat p1 p2 = 
     p1 /> p2 />/ (fun (x,y) -> x @ y)
@@ -154,7 +154,7 @@ let p_either lst =
   | None -> raise (EmptyList "p_either cannot be called with empty list") 
 ;;
 
-
+(* Creates parser for string str *)
 let p_string str = 
   let p_inner = 
     (str |> 
@@ -169,16 +169,20 @@ let p_string str =
     | Lose _ -> Lose (Printf.sprintf "Expected string '%s', got '%s'" str a))
 ;;
 
+(* Creates parser for string of p1 concatted to string of p2 *)
 let p_concat_str p1 p2 = 
   p1 /> p2 />/ (fun (x,y) -> x ^ y)
 ;;
 
+(* Creates parser from concatenated strings in list *)
 let p_concat_strs ps = reduce p_concat_str ps ;;
 
+(* Creates parser for character as a string *)
 let p_char_as_str ch = 
   p_string (String.make 1 ch)
 ;;
 
+(* Creates parser for 0 or more matches of p *)
 let p_many p = 
   let rec inner acc str = 
     match run p str with 
@@ -190,10 +194,12 @@ let p_many p =
   Parser (inner "") 
 ;;
 
+(* Creates parser for 1 or more matches of p *)
 let p_many1 p = 
   p_concat_str p (p_many p)
 ;;
 
+(* Takes parsers list and delimiter, creates parser with delim in between parsers in ps *)
 let rec p_lister ps delim = 
   match ps with 
   | [] -> raise (EmptyList "p_lister cannot be called with an empty ps")
@@ -202,7 +208,7 @@ let rec p_lister ps delim =
 ;;
 
 
-
+(* lowercase, uppercase, and digits parsers *)
 let p_lower = p_either (List.map p_char_as_str (explode "abcdefghijklmnopqrstuvwxyz"))
 let p_upper = p_either (List.map p_char_as_str (explode "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
 let p_digits = p_either (List.map p_char_as_str (explode "0123456789"))
