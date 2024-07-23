@@ -167,3 +167,7 @@ val p_digits : string parser
 ```
 
 Matches digits.
+
+### Errors
+
+This library only has an `EmptyList` error. It gets raised whenever a function that takes in a list receives an empty list. 
