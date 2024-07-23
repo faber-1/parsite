@@ -1,0 +1,3 @@
+(library
+ (name parsington)
+ (modules combinators))
