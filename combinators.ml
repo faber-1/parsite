@@ -1,5 +1,5 @@
 (*
-Parsington
+Parsite
 
 This small library mostly provides some simple parsing functions that you can
 grow as you wish. 
@@ -11,24 +11,33 @@ This library is very string focused. A lot of functions return results with
 strings, but the result and parser types are provided for custom tinkering. 
 Also, the infix ops are a bit more flexible. 
 
+Also this library raises errors. Can't decide if that makes the functions impure
+but I may try to fix the functions up later.
+
 happy parsing!
 *)
 
 exception EmptyList of string
 
-(* Result, can be used to parse  *)
+(* Result type, used as parser output. Essentially either, but left type takes a 
+   string. *)
 type 'a result = 
 | Win of 'a
 | Lose of string
 
+(* Parser type, wraps parsing function that takes a string and returns a result
+   type with a 2-tuple parameter of ('a * string). The 'a type can be an accumulator
+   for parsers that don't accumulate strings. *)
 type 'a parser = 
 | Parser of (string -> ('a * string) result)
 
+(* unwraps parser type in par and runs parser on input string inp *)
 let run par inp = 
   let (Parser fn) = par in 
   fn inp
 ;;
 
+(* inner reduce function for some shenanigans *)
 let reduce f lst = 
   match lst with 
   | [] -> None
@@ -38,7 +47,8 @@ let reduce f lst =
 (* the fact String doesn't have an explode function is sad. *)
 let explode s = List.init (String.length s) (String.get s)
 
-(* And binder *)
+(* And binder, returns parser that concats p1 and p2. The return type value of the
+   returned parser will have a tuple of the concatenated matches. *)
 let ( /> ) p1 p2 = 
   let binded str = 
     match run p1 str with 
@@ -52,7 +62,7 @@ let ( /> ) p1 p2 =
   in Parser binded
 ;;
 
-(* Or binder *)
+(* Or binder, will return parser for first match between p1 and p2 *)
 let ( >/ ) p1 p2 = 
   let ored str = 
     match run p1 str with 
@@ -65,7 +75,7 @@ let ( >/ ) p1 p2 =
   in Parser ored
 ;;
 
-(* Map binder *)
+(* Map binder, binds function f to parser output *)
 let ( />/ ) p1 f = 
   let mapped str = 
     match run p1 str with 
@@ -75,7 +85,7 @@ let ( />/ ) p1 f =
   in Parser mapped
 ;;
 
-(* Parse and ignore left *)
+(* Parse and ignore left of operator *)
 let ( @> ) p1 p2 = 
   let igleft str = 
     match run p1 str with 
@@ -90,7 +100,7 @@ let ( @> ) p1 p2 =
 ;;
 
 
-(* Parse and ignore right *)
+(* Parse and ignore right of operator *)
 let ( >@ ) p1 p2 = 
   let igright str = 
     match run p1 str with 
@@ -104,6 +114,7 @@ let ( >@ ) p1 p2 =
   Parser igright
 ;;
 
+(* Parse middle p2 without parsing p1 and p3 *)
 let p_middle p1 p2 p3 = 
   p1 @> p2 >@ p3
 ;;
@@ -122,6 +133,7 @@ let p_char ch =
   Parser parser
 ;;
 
+(* Takes a list of parsers lst, and creates a parser that  *)
 let p_list lst = 
   let concat p1 p2 = 
     p1 /> p2 />/ (fun (x,y) -> x @ y)
@@ -161,6 +173,8 @@ let p_concat_str p1 p2 =
   p1 /> p2 />/ (fun (x,y) -> x ^ y)
 ;;
 
+let p_concat_strs ps = reduce p_concat_str ps ;;
+
 let p_char_as_str ch = 
   p_string (String.make 1 ch)
 ;;
@@ -176,12 +190,18 @@ let p_many p =
   Parser (inner "") 
 ;;
 
+let p_many1 p = 
+  p_concat_str p (p_many p)
+;;
+
 let rec p_lister ps delim = 
   match ps with 
   | [] -> raise (EmptyList "p_lister cannot be called with an empty ps")
   | [e] -> e
   | p::ps -> p_concat_str (p_concat_str p delim) (p_lister ps delim)
 ;;
+
+
 
 let p_lower = p_either (List.map p_char_as_str (explode "abcdefghijklmnopqrstuvwxyz"))
 let p_upper = p_either (List.map p_char_as_str (explode "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))

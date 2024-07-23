@@ -1,3 +1,3 @@
 (library
- (name parsington)
+ (name parsite)
  (modules combinators))

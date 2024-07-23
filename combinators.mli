@@ -12,8 +12,10 @@ val p_list : 'a parser list -> 'a list parser
 val p_either : 'a parser list -> 'a parser
 val p_string : string -> string parser
 val p_concat_str : string parser -> string parser -> string parser
+val p_concat_strs : string parser list -> string parser 
 val p_char_as_str : char -> string parser
 val p_many : string parser -> string parser
+val p_many1 : string parser -> string parser
 val p_lister : string parser list -> string parser -> string parser
 val p_lower : string parser
 val p_upper : string parser
