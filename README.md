@@ -2,7 +2,7 @@
 
 Parsite is a micro tiny library that I originally made for a language project (coming soon hopefully).
 
-Right now this is just for fun. It is not meant to be used in a serious manner, however I do plan to develop this page more.
+Right now this is just for fun. I wrote it in a day, and it is not meant to be used in a serious manner, however I do plan to develop this project more.
 
 If you plan to use this, you can just clone the library somewhere and copy the folder into the lib directory of your dune project.
 
