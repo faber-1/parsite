@@ -58,140 +58,176 @@ Parser functions have to return `result` types. This will be very heplful in you
 ### Functions
 
 ```ocaml
-val run : 'a parser -> string -> ('a * string) result
+val run : ('a -> 'b) Types.parser -> 'a -> 'b
 ```
 
 Takes a parser type value and runs it on a string. Returns the result of the computation. 
 
 ---
 ```ocaml
-val ( /> ) : 'a parser -> 'b parser -> ('a * 'b) parser
+val ( /> ) :
+  ('a -> ('b * 'c) Types.result) Types.parser ->
+  ('c -> ('d * 'e) Types.result) Types.parser ->
+  ('a -> (('b * 'd) * 'e) Types.result) Types.parser
 ```
 
 Infix concat operator. Concatenates two parsers, and creates a new parser that contains the two parser requirements in a tuple. I'd recommend performing extra operations on a tuple parser.
 
 ---
 ```ocaml
-val ( >/ ) : 'a parser -> 'a parser -> 'a parser
+val ( >/ ) :
+  ('a -> 'b Types.result) Types.parser ->
+  ('a -> 'b Types.result) Types.parser ->
+  ('a -> 'b Types.result) Types.parser
 ```
 
 Infix or operator. Creates a parser that accepts either the input from the first or second parser passed in.
 
 ---
 ```ocaml
-val ( />/ ) : 'a parser -> ('a -> 'b) -> 'b parser
+val ( />/ ) :
+  ('a -> ('b * 'c) Types.result) Types.parser ->
+  ('b -> 'd) -> ('a -> ('d * 'c) Types.result) Types.parser
 ```
 
 Infix map operator. Takes a parser and a function and applies it to the parser given. It returns a parser with a function applied to the original requirement.
 
 ---
 ```ocaml
-val ( @> ) : 'a parser -> 'b parser -> 'b parser
+val ( @> ) :
+  ('a -> ('b * 'c) Types.result) Types.parser ->
+  ('c -> ('d * 'e) Types.result) Types.parser ->
+  ('a -> ('d * 'e) Types.result) Types.parser
 ```
 
 Infix ignore left operator. Takes two parsers and runs them both, but only keeps the result of the right side parser and discards the left.
 
 ---
 ```ocaml
-val ( >@ ) : 'a parser -> 'b parser -> 'a parser
+val ( >@ ) :
+  ('a -> ('b * 'c) Types.result) Types.parser ->
+  ('c -> ('d * 'e) Types.result) Types.parser ->
+  ('a -> ('b * 'e) Types.result) Types.parser
 ```
 
 Infix ignore right operator. Takes two parsers, runs them, and keeps the result of the left side parser and discards the right.
 
 ---
 ```ocaml
-val p_middle : 'a parser -> 'b parser -> 'c parser -> 'b parser
+val p_middle :
+  ('a -> ('b * 'c) Types.result) Types.parser ->
+  ('c -> ('d * 'e) Types.result) Types.parser ->
+  ('e -> ('f * 'g) Types.result) Types.parser ->
+  ('a -> ('d * 'g) Types.result) Types.parser
 ```
 
 Takes 3 parsers, runs them all, but only keeps the middle parser's result.
 
 ---
 ```ocaml
-val p_char : char -> char parser
+val p_char : char -> (string -> (char * string) Types.result) Types.parser
 ```
 
 Parses a single charcter.
 
 ---
 ```ocaml
-val p_list : 'a parser list -> 'a list parser
-```
+val p_list :
+  ('a -> ('b * 'a) Types.result) Types.parser list ->
+  ('a -> ('b list * 'a) Types.result) Types.parser
+  ```
 
 Takes a list of parsers, and builds a list of those rules and puts that list in one parser.
 
 ---
 ```ocaml
-val p_either : 'a parser list -> 'a parser
+val p_either :
+  ('a -> 'b Types.result) Types.parser list ->
+  ('a -> 'b Types.result) Types.parser
 ```
 
 Takes a list of parsers, and accepts inputs for matches for any parser in the list.
 
 ---
 ```ocaml
-val p_string : string -> string parser
+val p_string :
+  string -> (string -> (string * string) Types.result) Types.parser
 ```
 
 Creates parser for a specific string.
 
 ---
 ```ocaml
-val p_concat_str : string parser -> string parser -> string parser
+val p_concat_str :
+  ('a -> (string * 'b) Types.result) Types.parser ->
+  ('b -> (string * 'c) Types.result) Types.parser ->
+  ('a -> (string * 'c) Types.result) Types.parser
 ```
 
 Concats two string parsers together.
 
 ---
 ```ocaml
-val p_concat_strs : string parser list -> string parser 
+val p_concat_strs :
+  ('a -> (string * 'a) Types.result) Types.parser list ->
+  ('a -> (string * 'a) Types.result) Types.parser  
 ```
 
 Concats multiple string parsers together.
 
 ---
 ```ocaml
-val p_char_as_str : char -> string parser
+val p_char_as_str :
+  char -> (string -> (string * string) Types.result) Types.parser
 ```
 
 Takes a character and creates a string parser just for that character.
 
 ---
 ```ocaml
-val p_many : string parser -> string parser
+val p_many :
+  ('a -> (string * 'a) Types.result) Types.parser ->
+  ('a -> (string * 'a) Types.result) Types.parser
 ```
 
 Matches given string parser 0 or more times. Like `*` from regex.
 
 ---
 ```ocaml
-val p_many1 : string parser -> string parser
+val p_many1 :
+  ('a -> (string * 'a) Types.result) Types.parser ->
+  ('a -> (string * 'a) Types.result) Types.parser
 ```
 
 Matches given string parser 1 or more times. Like `+` from regex.
 
 ---
 ```ocaml
-val p_lister : string parser list -> string parser -> string parser
+val p_lister :
+  ('a -> (string * 'b) Types.result) Types.parser list ->
+  ('b -> (string * 'a) Types.result) Types.parser ->
+  ('a -> (string * 'b) Types.result) Types.parser
 ```
 
 Takes a list of parsers and a delimiter, and creates a parser with the delimiter between each string in the list.
 
 ---
 ```ocaml
-val p_lower : string parser
+val p_lower : (string -> (string * string) Types.result) Types.parser
 ```
 
 Matches lowercase letters.
 
 ---
 ```ocaml
-val p_upper : string parser
+val p_upper : (string -> (string * string) Types.result) Types.parser
 ```
 
 Matches uppercase letters.
 
 ---
 ```ocaml
-val p_digits : string parser
+val p_digits : (string -> (string * string) Types.result) Types.parser
 ```
 
 Matches digits.

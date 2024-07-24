@@ -173,7 +173,10 @@ let p_concat_str p1 p2 =
 ;;
 
 (* Creates parser from concatenated strings in list *)
-let p_concat_strs ps = reduce p_concat_str ps 
+let p_concat_strs ps = 
+  match reduce p_concat_str ps with 
+  | Some a -> a
+  | None -> raise (EmptyList "Cannot call p_concat_strs with an empty list.")
 
 (* Creates parser for character as a string *)
 let p_char_as_str ch = 

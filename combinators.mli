@@ -39,7 +39,7 @@ val p_concat_str :
   ('a -> (string * 'c) Types.result) Types.parser
 val p_concat_strs :
   ('a -> (string * 'a) Types.result) Types.parser list ->
-  ('a -> (string * 'a) Types.result) Types.parser option
+  ('a -> (string * 'a) Types.result) Types.parser
 val p_char_as_str :
   char -> (string -> (string * string) Types.result) Types.parser
 val p_many :
