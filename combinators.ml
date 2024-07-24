@@ -17,22 +17,12 @@ but I may try to fix the functions up later.
 happy parsing!
 *)
 
+open Types
+
 exception EmptyList of string
 
-(* Result type, used as parser output. Essentially either, but left type takes a 
-   string. *)
-type 'a result = 
-| Win of 'a
-| Lose of string
-
-(* Parser type, wraps parsing function that takes a string and returns a result
-   type with a 2-tuple parameter of ('a * string). The 'a type can be an accumulator
-   for parsers that don't accumulate strings. *)
-type 'a parser = 
-| Parser of (string -> ('a * string) result)
-
 (* unwraps parser type in par and runs parser on input string inp *)
-let run par inp = 
+let run (par: 'a parser) inp = 
   let (Parser fn) = par in 
   fn inp
 ;;
@@ -44,82 +34,85 @@ let reduce f lst =
   | h::t -> Some (List.fold_left f h t)
 ;;
 
+
 (* the fact String doesn't have an explode function is sad. *)
 let explode s = List.init (String.length s) (String.get s)
+;;
 
 (* And binder, returns parser that concats p1 and p2. The return type value of the
    returned parser will have a tuple of the concatenated matches. *)
 let ( /> ) p1 p2 = 
-  let binded str = 
-    match run p1 str with 
-    | Win (a, str') -> 
-      (match run p2 str' with 
-      | Win (a', str'') ->
-        Win ((a, a'), str'')
-      | Lose a -> Lose a
-      ) 
-    | Lose a -> Lose a
-  in Parser binded
+  let open ParserM in
+  p1 >>= fun r1 -> 
+  p2 >>= fun r2 -> 
+  let anded str = 
+    let open ResultM in 
+    (r1 str) >>= fun (a, str') -> 
+    (r2 str') >>= fun (a', str'') -> 
+    return ((a,a'), str'')
+  in
+  return anded
 ;;
 
 (* Or binder, will return parser for first match between p1 and p2 *)
 let ( >/ ) p1 p2 = 
   let ored str = 
     match run p1 str with 
-    | Win (a, str') -> 
-      Win (a, str') 
-    | Lose _ -> 
-      match run p2 str with 
-      | Win (a', str') -> Win (a', str')
-      | Lose a' -> Lose a'
+    | Win _ as w -> w
+    | Lose _ -> run p2 str
   in Parser ored
 ;;
 
+
 (* Map binder, binds function f to parser output *)
 let ( />/ ) p1 f = 
+  let open ParserM in 
+  p1 >>= fun r1 -> 
   let mapped str = 
-    match run p1 str with 
-    | Win (a, str') -> 
-      Win (f a, str')
-    | Lose a -> Lose a 
-  in Parser mapped
+    let open ResultM in 
+    (r1 str) >>= fun (a, str') -> 
+    return (f a, str')
+  in
+  return mapped
 ;;
+
 
 (* Parse and ignore left of operator *)
 let ( @> ) p1 p2 = 
+  let open ParserM in 
+  p1 >>= fun r1 -> 
+  p2 >>= fun r2 -> 
   let igleft str = 
-    match run p1 str with 
-    | Win (_, str') -> 
-      (match run p2 str' with 
-      | Win (a, str'') -> Win (a, str'')
-      | Lose a -> Lose a
-      )
-    | Lose a -> Lose a
-  in 
-  Parser igleft
+    let open ResultM in
+    (r1 str) >>= fun (_, str') -> 
+    (r2 str') >>= fun (a', str'') -> 
+    return (a', str'')
+  in
+  return igleft
 ;;
-
 
 (* Parse and ignore right of operator *)
 let ( >@ ) p1 p2 = 
+  let open ParserM in 
+  p1 >>= fun r1 -> 
+  p2 >>= fun r2 -> 
   let igright str = 
-    match run p1 str with 
-    | Win (a, str') -> 
-      (match run p2 str' with 
-      | Win (_, str'') -> Win(a, str'')
-      | Lose a -> Lose a
-      )
-    | Lose a -> Lose a
+    let open ResultM in
+    (r1 str) >>= fun (a, str') -> 
+    (r2 str') >>= fun (_, str'') -> 
+    return (a, str'')
   in
-  Parser igright
+  return igright
 ;;
+
 
 (* Parse middle p2 without parsing p1 and p3 *)
 let p_middle p1 p2 p3 = 
   p1 @> p2 >@ p3
-;;
+
 
 let p_char ch = 
+  let open ParserM in
   let parser str = 
     if str = "" then 
       Lose "Empty String"
@@ -130,10 +123,11 @@ let p_char ch =
       else
         Lose (Printf.sprintf "Expected char '%c', got char '%c'" ch first)  
   in
-  Parser parser
+  return parser
 ;;
 
-(* Takes a list of parsers lst, and creates a parser that contains the list of rules for each parser passed in *)
+(* Takes a list of parsers lst, and creates a parser that contains the list of 
+   rules for each parser passed in *)
 let p_list lst = 
   let concat p1 p2 = 
     p1 /> p2 />/ (fun (x,y) -> x @ y)
@@ -148,14 +142,17 @@ let p_list lst =
   | None -> raise (EmptyList "p_list cannot be called with empty list")
 ;;
 
+
 let p_either lst = 
   match reduce (>/) lst with
   | Some a -> a 
   | None -> raise (EmptyList "p_either cannot be called with empty list") 
 ;;
 
+
 (* Creates parser for string str *)
 let p_string str = 
+  let open ParserM in 
   let p_inner = 
     (str |> 
     explode |> 
@@ -163,11 +160,12 @@ let p_string str =
     p_list )
     />/ (fun a -> String.of_seq (List.to_seq a))
   in 
-  Parser (fun a -> 
+  return (fun a -> 
     match run p_inner a with 
     | Win (a, str) -> Win (a, str)
     | Lose _ -> Lose (Printf.sprintf "Expected string '%s', got '%s'" str a))
 ;;
+
 
 (* Creates parser for string of p1 concatted to string of p2 *)
 let p_concat_str p1 p2 = 
@@ -175,7 +173,7 @@ let p_concat_str p1 p2 =
 ;;
 
 (* Creates parser from concatenated strings in list *)
-let p_concat_strs ps = reduce p_concat_str ps ;;
+let p_concat_strs ps = reduce p_concat_str ps 
 
 (* Creates parser for character as a string *)
 let p_char_as_str ch = 
@@ -184,14 +182,16 @@ let p_char_as_str ch =
 
 (* Creates parser for 0 or more matches of p *)
 let p_many p = 
+  let open ParserM in 
+  p >>= fun r -> 
   let rec inner acc str = 
-    match run p str with 
+    match r str with 
     | Win (a, str') -> 
       inner (acc ^ a) str' 
     | Lose _ -> 
       Win (acc, str)
   in
-  Parser (inner "") 
+  return (inner "") 
 ;;
 
 (* Creates parser for 1 or more matches of p *)
@@ -207,8 +207,10 @@ let rec p_lister ps delim =
   | p::ps -> p_concat_str (p_concat_str p delim) (p_lister ps delim)
 ;;
 
-
 (* lowercase, uppercase, and digits parsers *)
 let p_lower = p_either (List.map p_char_as_str (explode "abcdefghijklmnopqrstuvwxyz"))
+;;
 let p_upper = p_either (List.map p_char_as_str (explode "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+;;
 let p_digits = p_either (List.map p_char_as_str (explode "0123456789"))
+;;
