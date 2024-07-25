@@ -1,3 +1,4 @@
-(library
- (name parsite)
- (modules combinators types))
+(env
+ (dev
+  (flags
+   (:standard -warn-error -A))))
