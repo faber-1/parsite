@@ -13,23 +13,18 @@ I'd also like to thank [this video](https://www.youtube.com/watch?v=RDalzi7mhdY)
 ### Types
 
 ```ocaml
-type 'a result = 
-| Win of ('a * string)
-| Lose of string
-
-module ResultM = struct
-  let return (x : 'a) : 'a result = 
-    Win x 
-
-  let (>>=) (m : 'a result) (f : 'a -> 'b result) : 'b result =
-    match m with 
-    | Win a -> f a  
-    | Lose _ as l-> l
-end
+type 'a result = Win of 'a | Lose of string
+module ResultM :
+  sig
+    val return : 'a -> 'a result
+    val ( >>= ) : 'a result -> ('a -> 'b result) -> 'b result
+  end
 ```
 A `result` type is what a parser will return after running. It either returns a success `Win` of whatever type you decide to parse, or a `Lose` type with a string for an error message
 
 There's also the `ResultM` monad which has a `return` function that wrapps its input in a `Win` constructor, and the bind (`>>=`) operator which applies a function to a `result` value if that value is a `Win` value.
+
+It's a basic monad but it helped string a few things along easier.
 
 ```ocaml
 type 'a parser = 
@@ -47,13 +42,7 @@ module ParserM = struct
 end
 
 ```
-A `parser` type wraps the function for parsing a given string. The parser type is important as pretty much every operator and function in this library will use this type. It's basically hyper function composition wrapped in a type... one might say for extra computation.........
 
-~~(I don't think this parser is a monad)~~ I was recently made aware that the `parser` and `result` types are in fact monads. I now see the way.
-
-The `return` function for `ParserM` wraps the return function in a `parser` type, and the bind (`>>=`) operator applies the function given to the inner function of the `parser` value.
-
-Parser functions have to return `result` types. This will be very heplful in your own parsers `:)`
 
 ### Functions
 

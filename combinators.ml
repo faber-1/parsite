@@ -1,5 +1,5 @@
 (*
-Parsite
+Parsite functions, courtesy of faber-1
 
 This small library mostly provides some simple parsing functions that you can
 grow as you wish. 
@@ -21,12 +21,6 @@ open Types
 
 exception EmptyList of string
 
-(* unwraps parser type in par and runs parser on input string inp *)
-let run (par: 'a parser) inp = 
-  let (Parser fn) = par in 
-  fn inp
-;;
-
 (* inner reduce function for some shenanigans *)
 let reduce f lst = 
   match lst with 
@@ -41,68 +35,48 @@ let explode s = List.init (String.length s) (String.get s)
 
 (* And binder, returns parser that concats p1 and p2. The return type value of the
    returned parser will have a tuple of the concatenated matches. *)
-let ( /> ) p1 p2 = 
-  let open ParserM in
-  p1 >>= fun r1 -> 
-  p2 >>= fun r2 -> 
-  let anded str = 
+let ( /> ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'c) p_func) : ('a , 'b * 'c) p_func = 
+  fun str -> 
     let open ResultM in 
-    (r1 str) >>= fun (a, str') -> 
-    (r2 str') >>= fun (a', str'') -> 
-    return ((a,a'), str'')
-  in
-  return anded
+    p1 str >>= fun (a, s) -> 
+    p2 s >>= fun (a', s') -> 
+    return ((a, a'), s')
 ;;
 
 (* Or binder, will return parser for first match between p1 and p2 *)
-let ( >/ ) p1 p2 = 
-  let ored str = 
-    match run p1 str with 
-    | Win _ as w -> w
-    | Lose _ -> run p2 str
-  in Parser ored
+let ( >/ ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'b) p_func) : ('a, 'b) p_func= 
+  fun str -> 
+    match p1 str with 
+    | Win _ as w -> w 
+    | Lose _ -> p2 str
 ;;
 
 
 (* Map binder, binds function f to parser output *)
-let ( />/ ) p1 f = 
-  let open ParserM in 
-  p1 >>= fun r1 -> 
-  let mapped str = 
+let ( />/ ) (p1 : ('a, 'b) p_func) (f : 'b -> 'c): ('a, 'c) p_func = 
+  fun (str : 'a) -> 
     let open ResultM in 
-    (r1 str) >>= fun (a, str') -> 
+    p1 str >>= fun (a, str') -> 
     return (f a, str')
-  in
-  return mapped
 ;;
 
 
 (* Parse and ignore left of operator *)
-let ( @> ) p1 p2 = 
-  let open ParserM in 
-  p1 >>= fun r1 -> 
-  p2 >>= fun r2 -> 
-  let igleft str = 
-    let open ResultM in
-    (r1 str) >>= fun (_, str') -> 
-    (r2 str') >>= fun (a', str'') -> 
-    return (a', str'')
-  in
-  return igleft
+let ( @> ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'b) p_func) : ('a, 'b) p_func = 
+  fun str -> 
+    let open ResultM in 
+    p1 str >>= fun (_, s) -> 
+    p2 s >>= fun (a', s') -> 
+    return (a', s')
 ;;
 
 (* Parse and ignore right of operator *)
-let ( >@ ) p1 p2 = 
-  let open ParserM in 
-  p1 >>= fun r1 -> 
-  p2 >>= fun r2 -> 
-  let igright str = 
-    let open ResultM in
-    (r1 str) >>= fun (a, str') -> 
-    (r2 str') >>= fun (_, str'') -> 
-    return (a, str'')
-  in
-  return igright
+let ( >@ ) (p1 : ('a, 'b) p_func) (p2 :('a, 'b) p_func) : ('a, 'b) p_func = 
+  fun str -> 
+    let open ResultM in 
+    p1 str >>= fun (a, s) -> 
+    p2 s >>= fun (_, s') -> 
+    return (a, s')
 ;;
 
 
@@ -111,9 +85,8 @@ let p_middle p1 p2 p3 =
   p1 @> p2 >@ p3
 
 
-let p_char ch = 
-  let open ParserM in
-  let parser str = 
+let p_char (ch : char) : (string, char) p_func = 
+  fun str -> 
     if str = "" then 
       Lose "Empty String"
     else
@@ -121,16 +94,14 @@ let p_char ch =
       if first = ch then 
         Win (ch, rest)
       else
-        Lose (Printf.sprintf "Expected char '%c', got char '%c'" ch first)  
-  in
-  return parser
+        Lose (Printf.sprintf "Expected char '%c', got char '%c'" ch first)
 ;;
 
 (* Takes a list of parsers lst, and creates a parser that contains the list of 
    rules for each parser passed in *)
-let p_list lst = 
+let p_list (lst : ('a, 'b) p_func list) : ('a, 'b list) p_func= 
   let concat p1 p2 = 
-    p1 /> p2 />/ (fun (x,y) -> x @ y)
+    p1 /> p2 />/ fun (x, y) -> x @ y
   in 
   let ps =  
     lst |>
@@ -143,7 +114,7 @@ let p_list lst =
 ;;
 
 
-let p_either lst = 
+let p_either (lst : ('a, 'b) p_func list) : ('a, 'b) p_func  = 
   match reduce (>/) lst with
   | Some a -> a 
   | None -> raise (EmptyList "p_either cannot be called with empty list") 
@@ -151,8 +122,7 @@ let p_either lst =
 
 
 (* Creates parser for string str *)
-let p_string str = 
-  let open ParserM in 
+let p_string (str : string) : (string, string) p_func = 
   let p_inner = 
     (str |> 
     explode |> 
@@ -160,50 +130,48 @@ let p_string str =
     p_list )
     />/ (fun a -> String.of_seq (List.to_seq a))
   in 
-  return (fun a -> 
-    match run p_inner a with 
-    | Win (a, str) -> Win (a, str)
+  (fun a -> 
+    match p_inner a with 
+    | Win _ as w -> w
     | Lose _ -> Lose (Printf.sprintf "Expected string '%s', got '%s'" str a))
 ;;
 
 
 (* Creates parser for string of p1 concatted to string of p2 *)
-let p_concat_str p1 p2 = 
+let p_concat_str (p1 : (string, string) p_func) (p2 : (string, string) p_func) : (string, string) p_func = 
   p1 /> p2 />/ (fun (x,y) -> x ^ y)
 ;;
 
 (* Creates parser from concatenated strings in list *)
-let p_concat_strs ps = 
+let p_concat_strs (ps : (string, string) p_func list) : (string, string) p_func = 
   match reduce p_concat_str ps with 
   | Some a -> a
   | None -> raise (EmptyList "Cannot call p_concat_strs with an empty list.")
 
 (* Creates parser for character as a string *)
-let p_char_as_str ch = 
+let p_char_as_str (ch : char) : (string, string) p_func = 
   p_string (String.make 1 ch)
 ;;
 
 (* Creates parser for 0 or more matches of p *)
-let p_many p = 
-  let open ParserM in 
-  p >>= fun r -> 
+let p_many (p : (string, string) p_func) : (string, string) p_func= 
   let rec inner acc str = 
-    match r str with 
+    match p str with 
     | Win (a, str') -> 
       inner (acc ^ a) str' 
     | Lose _ -> 
       Win (acc, str)
   in
-  return (inner "") 
+  inner ""
 ;;
 
 (* Creates parser for 1 or more matches of p *)
-let p_many1 p = 
+let p_many1 (p : (string, string) p_func) : (string, string) p_func = 
   p_concat_str p (p_many p)
 ;;
 
 (* Takes parsers list and delimiter, creates parser with delim in between parsers in ps *)
-let rec p_lister ps delim = 
+let rec p_lister (ps : (string, string) p_func list) (delim : (string, string) p_func) = 
   match ps with 
   | [] -> raise (EmptyList "p_lister cannot be called with an empty ps")
   | [e] -> e
@@ -211,9 +179,9 @@ let rec p_lister ps delim =
 ;;
 
 (* lowercase, uppercase, and digits parsers *)
-let p_lower = p_either (List.map p_char_as_str (explode "abcdefghijklmnopqrstuvwxyz"))
+let p_lower : (string, string) p_func = p_either (List.map p_char_as_str (explode "abcdefghijklmnopqrstuvwxyz"))
 ;;
-let p_upper = p_either (List.map p_char_as_str (explode "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+let p_upper : (string, string) p_func  = p_either (List.map p_char_as_str (explode "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
 ;;
-let p_digits = p_either (List.map p_char_as_str (explode "0123456789"))
+let p_digits : (string, string) p_func  = p_either (List.map p_char_as_str (explode "0123456789"))
 ;;
