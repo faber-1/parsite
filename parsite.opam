@@ -16,7 +16,7 @@ homepage: "https://github.com/faber-1/parsite"
 doc: "https://faber-1.github.io/parsite/"
 bug-reports: "https://github.com/faber-1/parsite/issues"
 depends: [
-  "ocaml"
+  "ocaml" {>= "4.07"}
   "dune" {>= "3.13"}
   "odoc" {with-doc}
 ]
