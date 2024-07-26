@@ -13,7 +13,7 @@ tags: [
   "parsing-library"
 ]
 homepage: "https://github.com/faber-1/parsite"
-doc: "https://faber-1.github.com/parsite/"
+doc: "https://faber-1.github.io/parsite/"
 bug-reports: "https://github.com/faber-1/parsite/issues"
 depends: [
   "ocaml"
