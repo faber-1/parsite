@@ -113,7 +113,7 @@ let p_list (lst : ('a, 'b) p_func list) : ('a, 'b list) p_func=
   | None -> raise (EmptyList "p_list cannot be called with empty list")
 ;;
 
-
+(* Gets list of parsers, creates parser that accepts input from any match *)
 let p_either (lst : ('a, 'b) p_func list) : ('a, 'b) p_func  = 
   match reduce (>/) lst with
   | Some a -> a 
