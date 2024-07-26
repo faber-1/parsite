@@ -13,7 +13,7 @@
 
 (license "MIT")
 
-(documentation https://github.com/faber-1/parsite)
+(documentation https://faber-1.github.com/parsite/)
 
 (package
  (name parsite)
