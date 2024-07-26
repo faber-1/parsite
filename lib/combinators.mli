@@ -3,7 +3,7 @@
 (** Thrown whenever functions that take lists take empty inputs *)
 exception EmptyList of string
 
-(** Infix concat operator. Concatenates two parsers, and creates a new parser 
+(** Infix concat operator. Concatenates two parsers and creates a new parser 
    that contains the two parser requirements in a tuple. I'd recommend 
    performing extra operations on a tuple-returning parser.  *)
 val ( /> ) :
