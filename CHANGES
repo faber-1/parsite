@@ -1,3 +1,9 @@
+## v0.11 (2024-07-26)
+
+- Changed name of `result` to `p_result` and `ResultM` to `PResultM` to avoid conflict with OCaml result type (also keeps naming convention of library and functions consistent)
+- Fixed dune issues
+- Working on docs
+
 ## v0.1 (2024-07-26)
 
 Initial opam release!

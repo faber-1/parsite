@@ -37,7 +37,7 @@ let explode s = List.init (String.length s) (String.get s)
    returned parser will have a tuple of the concatenated matches. *)
 let ( /> ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'c) p_func) : ('a , 'b * 'c) p_func = 
   fun str -> 
-    let open ResultM in 
+    let open PResultM in 
     p1 str >>= fun (a, s) -> 
     p2 s >>= fun (a', s') -> 
     return ((a, a'), s')
@@ -55,7 +55,7 @@ let ( >/ ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'b) p_func) : ('a, 'b) p_func=
 (* Map binder, binds function f to parser output *)
 let ( />/ ) (p1 : ('a, 'b) p_func) (f : 'b -> 'c): ('a, 'c) p_func = 
   fun (str : 'a) -> 
-    let open ResultM in 
+    let open PResultM in 
     p1 str >>= fun (a, str') -> 
     return (f a, str')
 ;;
@@ -64,7 +64,7 @@ let ( />/ ) (p1 : ('a, 'b) p_func) (f : 'b -> 'c): ('a, 'c) p_func =
 (* Parse and ignore left of operator *)
 let ( @> ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'b) p_func) : ('a, 'b) p_func = 
   fun str -> 
-    let open ResultM in 
+    let open PResultM in 
     p1 str >>= fun (_, s) -> 
     p2 s >>= fun (a', s') -> 
     return (a', s')
@@ -73,7 +73,7 @@ let ( @> ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'b) p_func) : ('a, 'b) p_func =
 (* Parse and ignore right of operator *)
 let ( >@ ) (p1 : ('a, 'b) p_func) (p2 :('a, 'b) p_func) : ('a, 'b) p_func = 
   fun str -> 
-    let open ResultM in 
+    let open PResultM in 
     p1 str >>= fun (a, s) -> 
     p2 s >>= fun (_, s') -> 
     return (a, s')

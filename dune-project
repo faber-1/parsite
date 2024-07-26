@@ -20,7 +20,6 @@
  (synopsis "A micro library for simple parsing combinators")
  (description "A micro library for simple parsing combinators")
  (depends ocaml dune)
- (allow_empty)
  (tags
   (string ocaml functional-programming parsing-combinators parsing-library)))
 

@@ -1,2 +1,4 @@
 (library
- (name p_comb_exec))
+ (public_name parsite)
+ (name parsite)
+ (modules combinators types))
