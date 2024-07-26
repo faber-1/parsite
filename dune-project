@@ -17,8 +17,8 @@
 
 (package
  (name parsite)
- (synopsis "A micro library for simple parsing combinators. ")
- (description "A micro library for simple parsing combinators. ")
+ (synopsis "A micro library for simple parsing combinators")
+ (description "A micro library for simple parsing combinators")
  (depends ocaml dune)
  (allow_empty)
  (tags
