@@ -1,6 +1,6 @@
 (* Parsite functions, courtesy of faber-1 *)
 
-(** thrown whenever functions that take lists take empty inputs *)
+(** Thrown whenever functions that take lists take empty inputs *)
 exception EmptyList of string
 
 (** Infix concat operator. Concatenates two parsers, and creates a new parser 
