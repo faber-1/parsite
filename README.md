@@ -10,4 +10,4 @@ I'd also like to thank [this video](https://www.youtube.com/watch?v=RDalzi7mhdY)
 
 ## Features 
 
-You can find the type and function information in the .mli files given.
+You can find the type and function information at https://faber-1.github.io/parsite/
