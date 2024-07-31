@@ -22,6 +22,14 @@ Also includes a [fail] function that returns an error message, and [(=<<)] infix
 function to handle any [Lose] cases. 
 
 It's a basic monad but it helped string a few things along easier.
+
+Example: 
+{[
+  let func p1 str = 
+    let open PResultM in 
+    p1 str >>= fun (a, str') -> 
+    ... 
+]}
 *)
 module PResultM :
   sig

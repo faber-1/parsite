@@ -4,11 +4,6 @@ Parsite is a micro tiny parser combinator library for parsing strings that I ori
 
 Right now this is just for fun, however I do plan to develop this project more.
 
-If you plan to use this, I will upload this to opam after a few checks.
+**Now in opam shape!** Instructions for installation along with docs and examples can be found at https://faber-1.github.io/parsite/
 
 I'd also like to thank [this video](https://www.youtube.com/watch?v=RDalzi7mhdY) for the help and inspiration.
-
-## Features 
-
-You can find the type and function information along with examples at https://faber-1.github.io/parsite/
-

@@ -2,6 +2,17 @@
 
 Parsite is a small library containing parser combinators for parsing strings. 
 
-The library provides functions and types for a few string operations that may prove useful. Provided in monadic shape!
+The library provides functions and types for a few string operations that may 
+prove useful. Provided in monadic shape!
+
+{1 Installation}
+
+To install this library, run [opam install parsite].
+
+{1 Usage}
+
+Parsite has 2 modules: [Combinators] and [Types]. To include the modules 
+in your file, add them to your dune project accordingly, and do 
+[open Parsite.Combinators] or [open Parsite.Types] according to your needs.
 
 To get started, go here: {!Parsite}
