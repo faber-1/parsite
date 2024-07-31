@@ -7,7 +7,7 @@ prove useful. Provided in monadic shape!
 
 {1 Installation}
 
-To install this library, run [opam install parsite].
+To install this library, update your available packages in opam with [opam update], and then run [opam install parsite].
 
 {1 Usage}
 
