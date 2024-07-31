@@ -15,4 +15,6 @@ Parsite has 2 modules: [Combinators] and [Types]. To include the modules
 in your file, add them to your dune project accordingly, and do 
 [open Parsite.Combinators] or [open Parsite.Types] according to your needs.
 
+{1 Get Started!}
+
 To get started, go here: {!Parsite}
