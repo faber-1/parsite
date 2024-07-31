@@ -15,6 +15,15 @@ module PResultM = struct
     match m with 
     | Win e -> f e
     | Lose _ as l-> l
+
+  let fail (x: string) : ('a, 'b) p_result = 
+    Lose x
+
+  let (=<<) (m: ('a, 'b) p_result) (f: string -> ('a, 'b) p_result) : ('a, 'b) p_result = 
+    match m with 
+    | Win _ as w -> w 
+    | Lose l -> f l
+  
 end
 
 type ('a, 'b) p_func = 'a -> ('a, 'b) p_result

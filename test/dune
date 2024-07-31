@@ -1,0 +1,3 @@
+(test
+ (name test_parsite)
+ (libraries ounit2 parsite))

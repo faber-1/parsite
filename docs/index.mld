@@ -1,0 +1,7 @@
+{0 Welcome to the Parsite Docs!}
+
+Parsite is a small library containing parser combinators for parsing strings. 
+
+The library provides functions and types for a few string operations that may prove useful. Provided in monadic shape!
+
+To get started, go here: {!Parsite}

@@ -18,7 +18,8 @@ bug-reports: "https://github.com/faber-1/parsite/issues"
 depends: [
   "ocaml" {>= "4.07"}
   "dune" {>= "3.13"}
-  "odoc" {with-doc}
+  "ounit2"
+  "odoc"
 ]
 build: [
   ["dune" "subst"] {dev}
@@ -30,6 +31,7 @@ build: [
     "-j"
     jobs
     "@install"
+    "@runtest" {with-test}
     "@doc" {with-doc}
   ]
 ]

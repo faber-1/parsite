@@ -1,3 +1,9 @@
+## v0.1.2 (2024-07-31)
+
+- Added `fail` and `( =<< )` functions to `PResultM` monad. 
+- Rewrote some functions to use `fail` and `( =<< )` functions. 
+- Fixed up docs heavily.
+
 ## v0.11 (2024-07-26)
 
 - Changed name of `result` to `p_result` and `ResultM` to `PResultM` to avoid conflict with OCaml result type (also keeps naming convention of library and functions consistent)

@@ -33,7 +33,7 @@ let reduce f lst =
 let explode s = List.init (String.length s) (String.get s)
 ;;
 
-(* And binder, returns parser that concats p1 and p2. The return type value of the
+(* Infix concat, returns parser that concats p1 and p2. The return type value of the
    returned parser will have a tuple of the concatenated matches. *)
 let ( /> ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'c) p_func) : ('a , 'b * 'c) p_func = 
   fun str -> 
@@ -43,16 +43,17 @@ let ( /> ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'c) p_func) : ('a , 'b * 'c) p_func
     return ((a, a'), s')
 ;;
 
-(* Or binder, will return parser for first match between p1 and p2 *)
+(* Infix or, will return parser for first match between p1 and p2 *)
 let ( >/ ) (p1 : ('a, 'b) p_func) (p2 : ('a, 'b) p_func) : ('a, 'b) p_func= 
   fun str -> 
-    match p1 str with 
-    | Win _ as w -> w 
-    | Lose _ -> p2 str
+    let open PResultM in 
+    p1 str =<< fun a -> 
+    p2 str =<< fun b -> 
+    fail (Printf.sprintf "Or Problem: Failed with following errors: (%s) and (%s)" a b)
 ;;
 
 
-(* Map binder, binds function f to parser output *)
+(* Infix map, applies function f to parser output *)
 let ( />/ ) (p1 : ('a, 'b) p_func) (f : 'b -> 'c): ('a, 'c) p_func = 
   fun (str : 'a) -> 
     let open PResultM in 
@@ -99,7 +100,7 @@ let p_char (ch : char) : (string, char) p_func =
 
 (* Takes a list of parsers lst, and creates a parser that contains the list of 
    rules for each parser passed in *)
-let p_list (lst : ('a, 'b) p_func list) : ('a, 'b list) p_func= 
+let p_list (lst : ('a, 'b) p_func list) : ('a, 'b list) p_func = 
   let concat p1 p2 = 
     p1 /> p2 />/ fun (x, y) -> x @ y
   in 
@@ -131,9 +132,9 @@ let p_string (str : string) : (string, string) p_func =
     />/ (fun a -> String.of_seq (List.to_seq a))
   in 
   (fun a -> 
-    match p_inner a with 
-    | Win _ as w -> w
-    | Lose _ -> Lose (Printf.sprintf "Expected string '%s', got '%s'" str a))
+    let open PResultM in 
+    p_inner a =<< fun _ ->
+    fail (Printf.sprintf "Expected string '%s', got '%s'" str a))
 ;;
 
 
@@ -154,13 +155,14 @@ let p_char_as_str (ch : char) : (string, string) p_func =
 ;;
 
 (* Creates parser for 0 or more matches of p *)
-let p_many (p : (string, string) p_func) : (string, string) p_func= 
+let p_many (p : (string, string) p_func) : (string, string) p_func = 
   let rec inner acc str = 
-    match p str with 
-    | Win (a, str') -> 
-      inner (acc ^ a) str' 
-    | Lose _ -> 
-      Win (acc, str)
+    let open PResultM in
+    let acc' = 
+      (p str >>= fun (a, str') -> 
+      inner (acc ^ a) str')
+    in 
+    acc' =<< fun _ -> return (acc, str) 
   in
   inner ""
 ;;

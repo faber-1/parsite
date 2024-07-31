@@ -19,7 +19,7 @@
  (name parsite)
  (synopsis "A micro library for simple parsing combinators")
  (description "A micro library for simple parsing combinators")
- (depends (ocaml (>= 4.07)) dune)
+ (depends (ocaml (>= 4.07)) dune ounit2 odoc)
  (tags
   (string ocaml functional-programming parsing-combinators parsing-library)))
 
