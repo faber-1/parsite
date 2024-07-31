@@ -3,6 +3,7 @@
 - Added `fail` and `( =<< )` functions to `PResultM` monad. 
 - Rewrote some functions to use `fail` and `( =<< )` functions. 
 - Fixed up docs heavily.
+- Changed version scheme to match OCaml style
 
 ## v0.11 (2024-07-26)
 
